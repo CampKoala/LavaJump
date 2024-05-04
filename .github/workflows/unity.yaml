@@ -1,0 +1,97 @@
+# This workflow will test, build and deploy a Unity Project
+
+name: Unity CI
+
+on:
+  push:
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  test:
+    name: Test in ${{ matrix.testMode }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        testMode:
+          - playmode
+          - editmode
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Restore Library Cache
+        uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-LavaJump-${{ matrix.targetPlatform }}
+          restore-keys: Library-
+
+      - name: Run Unit Tests
+        id: testStep
+        uses: game-ci/unity-test-runner@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          artifactsPath: ${{ matrix.testMode }}-artifacts
+          testMode: ${{ matrix.testMode }}
+          checkName: ${{ matrix.testMode }} Test Results
+          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;assemblyFilters:+my.assembly.*'
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Test results
+          path: ${{ steps.testStep.outputs.artifactsPath }}
+
+      - name: Upload Coverage Report
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Coverage Results
+          path: ${{ steps.testStep.outputs.coveragePath }}
+
+  build:
+    name: Build for ${{ matrix.targetPlatform }}
+    runs-on: ubuntu-22.04
+    needs:
+      - test
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform:
+          - WebGL # Build for WebGL
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          lfs: true
+
+      - name: Restore Library Cache
+        uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-LavaJump-${{ matrix.targetPlatform }}
+          restore-keys: Library-
+
+      - name: Build Unity Game
+        id: buildStep
+        uses: game-ci/unity-builder@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          targetPlatform: ${{ matrix.targetPlatform }}
+          versioning: Semantic
+
+      - name: Upload Unity Game Artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: Build-${{ matrix.targetPlatform }}-${{ steps.buildStep.outputs.buildVersion }}
+          path: build/${{ matrix.targetPlatform }}
