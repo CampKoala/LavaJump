@@ -95,7 +95,7 @@ public class GroundEnemy : MonoBehaviour
             }
         }
 
-        _rigidBody.velocity = targetVelocity;
+        _rigidBody.velocity = IsAtCliff ? new Vector2(0, _rigidBody.velocity.y) : targetVelocity;
     }
 
     private void HandleAnimation()
