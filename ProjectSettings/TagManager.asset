@@ -6,6 +6,7 @@ TagManager:
   tags:
   - GroundEnemy
   - AttackHitBox
+  - Feet
   layers:
   - Default
   - TransparentFX

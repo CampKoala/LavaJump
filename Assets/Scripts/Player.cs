@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -11,6 +12,7 @@ public class Player : MonoBehaviour
 
     private Rigidbody2D _rigidBody;
     private Collider2D _collider;
+    private Collider2D _feetCollider;
     private Animator _animator;
     private Vector2 _currentInput;
     private int _floorMask;
@@ -26,12 +28,13 @@ public class Player : MonoBehaviour
     private static readonly int AnimatorJumpTrigger = Animator.StringToHash("Jump");
     private static readonly int AnimatorHitTrigger = Animator.StringToHash("Hit");
 
-    private bool IsGrounded => _collider.IsTouchingLayers(_floorMask);
+    private bool IsGrounded => _feetCollider.IsTouchingLayers(_floorMask);
 
     public void Awake()
     {
         _rigidBody = GetComponent<Rigidbody2D>();
         _collider = GetComponent<Collider2D>();
+        _feetCollider = GetComponentsInChildren<Collider2D>().First(c => c.CompareTag("Feet"));
         _animator = GetComponent<Animator>();
         _floorMask = LayerMask.GetMask("Floor");
     }
