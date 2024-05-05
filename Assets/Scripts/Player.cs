@@ -98,7 +98,7 @@ public class Player : MonoBehaviour
 
     public void OnJump()
     {
-        if (!IsGrounded) return;
+        if (!IsGrounded || _isDead) return;
 
         _rigidBody.velocity = new Vector2(_rigidBody.velocity.x, jumpSpeed);
         _animator.SetTrigger(AnimatorJumpTrigger);
@@ -136,7 +136,7 @@ public class Player : MonoBehaviour
             enemy?.UnSubscribeDamage(OnTakeDamage);
         }
 
-        if (other.CompareTag("Untagged") && !_collider.IsTouching(other))
+        if (other.CompareTag("Aggro") && !_collider.IsTouching(other))
         {
             var enemy = other.GetComponentInParent<GroundEnemy>();
             enemy?.UnSubscribeAggro(this);

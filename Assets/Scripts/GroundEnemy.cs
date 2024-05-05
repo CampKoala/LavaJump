@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class GroundEnemy : MonoBehaviour
 {
+    [SerializeField] private int movementSpeed;
     [SerializeField] private int hitDamage;
     [SerializeField] private int health;
 
@@ -19,10 +20,10 @@ public class GroundEnemy : MonoBehaviour
     private bool _isDead;
     private int _currentHealth;
 
+    private static readonly int AnimatorDieTrigger = Animator.StringToHash("Die");
     private static readonly int AnimatorHitTrigger = Animator.StringToHash("Hit");
     private static readonly int AnimatorIsAttacking = Animator.StringToHash("IsAttacking");
     private static readonly int AnimatorIsWalking = Animator.StringToHash("IsWalking");
-    private static readonly int AnimatorDieTrigger = Animator.StringToHash("Die");
     private static readonly Vector3 HorizontalRotation = new(0, 180, 0);
     private readonly HashSet<Action<int>> _damageActions = new();
 
@@ -42,27 +43,31 @@ public class GroundEnemy : MonoBehaviour
     {
         _rigidBody.velocity = Vector3.right;
         _currentHealth = health;
+        _animator.SetBool(AnimatorIsWalking, true);
     }
 
     public void Update()
     {
         HandleTargeting();
+        HandleAnimation();
     }
 
     private void HandleTargeting()
     {
-        if (_isAttacking || _isDead)
+        if (_isDead)
             return;
+
+        if (_isAttacking)
+        {
+            _rigidBody.velocity = new Vector2(0, _rigidBody.velocity.y);
+            return;
+        }
 
         if (IsPatrolling)
         {
-            if (IsAtCliff)
-            {
-                transform.Rotate(HorizontalRotation);
-                _isFacingLeft = !_isFacingLeft;
-            }
-
-            _rigidBody.velocity = _isFacingLeft ? Vector3.left : Vector3.right;
+            _rigidBody.velocity = _isFacingLeft
+                ? new Vector2(-movementSpeed, _rigidBody.velocity.y)
+                : new Vector2(movementSpeed, _rigidBody.velocity.y);
             return;
         }
 
@@ -71,7 +76,7 @@ public class GroundEnemy : MonoBehaviour
 
         if (targetPosition.x < transform.position.x)
         {
-            targetVelocity = Vector3.left;
+            targetVelocity = new Vector2(-movementSpeed, _rigidBody.velocity.y);
 
             if (!_isFacingLeft)
             {
@@ -81,7 +86,7 @@ public class GroundEnemy : MonoBehaviour
         }
         else
         {
-            targetVelocity = Vector3.right;
+            targetVelocity = new Vector2(movementSpeed, _rigidBody.velocity.y);
 
             if (_isFacingLeft)
             {
@@ -90,18 +95,15 @@ public class GroundEnemy : MonoBehaviour
             }
         }
 
-        if (IsAtCliff)
-        {
-            _rigidBody.velocity = Vector3.zero;
-            _animator.SetBool(AnimatorIsWalking, false);
-        }
-        else
-        {
-            _rigidBody.velocity = targetVelocity;
-            _animator.SetBool(AnimatorIsWalking, true);
-        }
+        _rigidBody.velocity = targetVelocity;
     }
 
+    private void HandleAnimation()
+    {
+        _animator.SetBool(AnimatorIsAttacking, _isAttacking);
+        _animator.SetBool(AnimatorIsWalking, Math.Abs(_rigidBody.velocity.x) > float.Epsilon);
+    }
+    
     public void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("AttackHitBox") && _collider.IsTouching(other))
@@ -117,6 +119,12 @@ public class GroundEnemy : MonoBehaviour
         {
             var player = other.GetComponentInParent<Player>();
             player?.UnSubscribeDamage(OnTakeDamage);
+        }
+
+        if (IsPatrolling && other.CompareTag("Floor") && !_feetCollider.IsTouching(other))
+        {
+            transform.Rotate(HorizontalRotation);
+            _isFacingLeft = !_isFacingLeft;
         }
     }
 
@@ -139,18 +147,22 @@ public class GroundEnemy : MonoBehaviour
 
     public void SubscribeDamage(Action<int> damageAction)
     {
-        _damageActions.Add(damageAction);
+        if (_isDead)
+            return;
 
-        if (!_isAttacking)
-            OnStartAttacking();
+        _damageActions.Add(damageAction);
+        _isAttacking = true;
     }
 
     public void UnSubscribeDamage(Action<int> damageAction)
     {
+        if (_isDead)
+            return;
+
         _damageActions.Remove(damageAction);
 
-        if (_damageActions.Count < 1 && _isAttacking)
-            OnStopAttacking();
+        if (_damageActions.Count < 1)
+            _isAttacking = false;
     }
 
     public void OnDealDamage(int attack)
@@ -161,29 +173,19 @@ public class GroundEnemy : MonoBehaviour
         }
     }
 
-    private void OnStartAttacking()
-    {
-        _animator.SetBool(AnimatorIsAttacking, true);
-        _animator.SetBool(AnimatorIsWalking, false);
-        _rigidBody.velocity = Vector3.zero;
-        _isAttacking = true;
-    }
-
-    private void OnStopAttacking()
-    {
-        _animator.SetBool(AnimatorIsAttacking, false);
-        _animator.SetBool(AnimatorIsWalking, true);
-        _isAttacking = false;
-    }
-
     public void SubscribeAggro(Player target)
     {
+        if (_isDead)
+            return;
+        
         _target ??= target;
     }
 
     public void UnSubscribeAggro(Player target)
     {
-        if (_target == target)
-            _target = null;
+        if (_isDead || _target != target)
+            return;
+
+        _target = null;
     }
 }
