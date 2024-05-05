@@ -199,7 +199,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5796905549406683461, guid: 7c118521aed8487498ec6fef54dc2b16, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -2.57
+      value: -3.659
       objectReference: {fileID: 0}
     - target: {fileID: 5796905549406683461, guid: 7c118521aed8487498ec6fef54dc2b16, type: 3}
       propertyPath: m_LocalPosition.z
@@ -258,9 +258,17 @@ PrefabInstance:
       propertyPath: m_Follow
       value: 
       objectReference: {fileID: 308943697}
+    - target: {fileID: 3028930726352207938, guid: 1f7913e7eb727e445a04540a619f33eb, type: 3}
+      propertyPath: m_Lens.OrthographicSize
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 3238957408469150632, guid: 1f7913e7eb727e445a04540a619f33eb, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5034711832347067441, guid: 1f7913e7eb727e445a04540a619f33eb, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.47
+      value: -1.4700003
       objectReference: {fileID: 0}
     - target: {fileID: 5034711832347067441, guid: 1f7913e7eb727e445a04540a619f33eb, type: 3}
       propertyPath: m_LocalPosition.y
@@ -298,6 +306,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8580864434010841347, guid: 1f7913e7eb727e445a04540a619f33eb, type: 3}
+      propertyPath: orthographic size
+      value: 3
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -319,7 +331,7 @@ GameObject:
   - component: {fileID: 1137083459}
   m_Layer: 6
   m_Name: Platform Tilemap
-  m_TagString: Untagged
+  m_TagString: Floor
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

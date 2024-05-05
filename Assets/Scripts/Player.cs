@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float movementSpeed;
     [SerializeField] private float jumpSpeed;
     [SerializeField] [Min(1)] private int hitDamage;
+    [SerializeField] private int health;
 
     private Rigidbody2D _rigidBody;
     private Collider2D _collider;
@@ -19,6 +20,8 @@ public class Player : MonoBehaviour
     private bool _isJumping;
     private bool _isFacingLeft;
     private bool _isAttacking;
+    private bool _isDead;
+    private int _currentHealth;
     private readonly HashSet<Action<int>> _damageActions = new();
 
     private static readonly Vector3 HorizontalRotation = new(0, 180, 0);
@@ -27,6 +30,7 @@ public class Player : MonoBehaviour
     private static readonly int AnimatorIsAttacking = Animator.StringToHash("IsAttacking");
     private static readonly int AnimatorJumpTrigger = Animator.StringToHash("Jump");
     private static readonly int AnimatorHitTrigger = Animator.StringToHash("Hit");
+    private static readonly int AnimatorDieTrigger = Animator.StringToHash("Die");
 
     private bool IsGrounded => _feetCollider.IsTouchingLayers(_floorMask);
 
@@ -39,6 +43,11 @@ public class Player : MonoBehaviour
         _floorMask = LayerMask.GetMask("Floor");
     }
 
+    public void Start()
+    {
+        _currentHealth = health;
+    }
+
     public void Update()
     {
         HandleMovement();
@@ -47,6 +56,8 @@ public class Player : MonoBehaviour
 
     private void HandleMovement()
     {
+        if (_isDead) return;
+
         _rigidBody.velocity = new Vector2(_currentInput.x * movementSpeed * (_isAttacking && IsGrounded ? 0.0f : 1.0f),
             _rigidBody.velocity.y);
         _animator.SetBool(AnimatorIsRunning, Math.Abs(_currentInput.x) > float.Epsilon);
@@ -107,7 +118,13 @@ public class Player : MonoBehaviour
         if (other.CompareTag("AttackHitBox") && _collider.IsTouching(other))
         {
             var enemy = other.GetComponentInParent<GroundEnemy>();
-            enemy.SubscribeDamage(OnTakeDamage);
+            enemy?.SubscribeDamage(OnTakeDamage);
+        }
+
+        if (other.CompareTag("Aggro") && _collider.IsTouching(other))
+        {
+            var enemy = other.GetComponentInParent<GroundEnemy>();
+            enemy?.SubscribeAggro(this);
         }
     }
 
@@ -116,13 +133,31 @@ public class Player : MonoBehaviour
         if (other.CompareTag("AttackHitBox") && !_collider.IsTouching(other))
         {
             var enemy = other.GetComponentInParent<GroundEnemy>();
-            enemy.UnSubscribeDamage(OnTakeDamage);
+            enemy?.UnSubscribeDamage(OnTakeDamage);
+        }
+
+        if (other.CompareTag("Untagged") && !_collider.IsTouching(other))
+        {
+            var enemy = other.GetComponentInParent<GroundEnemy>();
+            enemy?.UnSubscribeAggro(this);
         }
     }
 
-    public void OnTakeDamage(int amount)
+    private void OnTakeDamage(int amount)
     {
-        _animator.SetTrigger(AnimatorHitTrigger);
+        if (_isDead) return;
+
+        _currentHealth -= amount;
+
+        if (_currentHealth > 0)
+        {
+            _animator.SetTrigger(AnimatorHitTrigger);
+        }
+        else
+        {
+            _animator.SetTrigger(AnimatorDieTrigger);
+            _isDead = true;
+        }
     }
 
     public void SubscribeDamage(Action<int> damageAction)
