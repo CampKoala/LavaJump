@@ -1,3 +1,4 @@
+using LavaJump;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float jumpSpeed;
     [SerializeField] [Min(1)] private int hitDamage;
     [SerializeField] private int health;
+    [SerializeField] private HealthBar healthBar;
 
     private Rigidbody2D _rigidBody;
     private Collider2D _collider;
@@ -46,6 +48,7 @@ public class Player : MonoBehaviour
     public void Start()
     {
         _currentHealth = health;
+        healthBar.SetMaxHealth(health);
     }
 
     public void Update()
@@ -148,6 +151,8 @@ public class Player : MonoBehaviour
         if (_isDead) return;
 
         _currentHealth -= amount;
+
+        healthBar.SetHealth(_currentHealth);
 
         if (_currentHealth > 0)
         {

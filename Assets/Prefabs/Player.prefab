@@ -333,6 +333,7 @@ MonoBehaviour:
   jumpSpeed: 12
   hitDamage: 1
   health: 5
+  healthBar: {fileID: 0}
 --- !u!114 &521777753972322591
 MonoBehaviour:
   m_ObjectHideFlags: 0
