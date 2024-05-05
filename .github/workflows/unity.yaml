@@ -2,96 +2,64 @@
 
 name: Unity CI
 
-on:
-  push:
-  pull_request:
-    branches: [ main, dev ]
+on: workflow_dispatch
 
 jobs:
-  test:
-    name: Test in ${{ matrix.testMode }}
-    runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-      matrix:
-        testMode:
-          - playmode
-          - editmode
+  build:
+    name: Build Unity Project
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          lfs: true
+      # Checkout (without LFS)
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Restore Library Cache
+      # Git LFS
+      - name: Create LFS file list
+        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+      - name: Restore LFS cache
         uses: actions/cache@v3
+        id: lfs-cache
+        with:
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
+
+      - name: Git LFS Pull
+        run: |
+          git lfs pull
+          git add .
+          git reset --hard
+
+      # Cache
+      - uses: actions/cache@v3
         with:
           path: Library
-          key: Library-LavaJump-${{ matrix.targetPlatform }}
-          restore-keys: Library-
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-
 
-      - name: Run Unit Tests
-        id: testStep
-        uses: game-ci/unity-test-runner@v2
+      # Test
+      - name: Run tests
+        uses: game-ci/unity-test-runner@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           githubToken: ${{ secrets.GITHUB_TOKEN }}
-          artifactsPath: ${{ matrix.testMode }}-artifacts
-          testMode: ${{ matrix.testMode }}
-          checkName: ${{ matrix.testMode }} Test Results
-          coverageOptions: 'generateAdditionalMetrics;generateHtmlReport;generateBadgeReport;assemblyFilters:+my.assembly.*'
 
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: Test results
-          path: ${{ steps.testStep.outputs.artifactsPath }}
-
-      - name: Upload Coverage Report
-        uses: actions/upload-artifact@v2
-        if: always()
-        with:
-          name: Coverage Results
-          path: ${{ steps.testStep.outputs.coveragePath }}
-
-  build:
-    name: Build for ${{ matrix.targetPlatform }}
-    runs-on: ubuntu-22.04
-    needs:
-      - test
-    strategy:
-      fail-fast: false
-      matrix:
-        targetPlatform:
-          - WebGL # Build for WebGL
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          lfs: true
-
-      - name: Restore Library Cache
-        uses: actions/cache@v3
-        with:
-          path: Library
-          key: Library-LavaJump-${{ matrix.targetPlatform }}
-          restore-keys: Library-
-
-      - name: Build Unity Game
-        id: buildStep
-        uses: game-ci/unity-builder@v2
+      # Build
+      - name: Build project
+        uses: game-ci/unity-builder@v4
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
-          targetPlatform: ${{ matrix.targetPlatform }}
-          versioning: Semantic
+          targetPlatform: WebGL
 
-      - name: Upload Unity Game Artifacts
-        uses: actions/upload-artifact@v2
+      # Output
+      - uses: actions/upload-artifact@v3
         with:
-          name: Build-${{ matrix.targetPlatform }}-${{ steps.buildStep.outputs.buildVersion }}
-          path: build/${{ matrix.targetPlatform }}
+          name: Build
+          path: build
