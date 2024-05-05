@@ -453,7 +453,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5034711832347067441, guid: 1f7913e7eb727e445a04540a619f33eb, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -1.4700003
+      value: -1.4700001
       objectReference: {fileID: 0}
     - target: {fileID: 5034711832347067441, guid: 1f7913e7eb727e445a04540a619f33eb, type: 3}
       propertyPath: m_LocalPosition.y
@@ -2799,7 +2799,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0.30957508, y: 0.097393036}
+  m_Offset: {x: 0.30957508, y: 0.7300091}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -2810,7 +2810,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 2.1478615, y: 0.20693207}
+  m_Size: {x: 2.1478615, y: 1.4721642}
   m_EdgeRadius: 0
 --- !u!4 &1344231333
 Transform:
@@ -2836,9 +2836,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1344231331}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dd46e97db385ef54b98f13361f4d47e6, type: 3}
+  m_Script: {fileID: 11500000, guid: 7c29f2493e55a1a4594d43193c35a8ee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  nextScene: 2
 --- !u!1 &1462254387
 GameObject:
   m_ObjectHideFlags: 0
@@ -3130,3 +3131,6 @@ SceneRoots:
   - {fileID: 2039267613}
   - {fileID: 1937271416}
   - {fileID: 696465267}
+  - {fileID: 1029531357}
+  - {fileID: 716532958}
+  - {fileID: 1121889986}
