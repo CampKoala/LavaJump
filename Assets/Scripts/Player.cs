@@ -6,7 +6,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float movementSpeed;
     [SerializeField] private float jumpSpeed;
 
-    private Rigidbody2D _rb;
+    private Rigidbody2D _rigidBody;
     private Collider2D _collider;
     private Vector2 _currentInput;
     private int _floorMask;
@@ -15,14 +15,14 @@ public class Player : MonoBehaviour
 
     public void Awake()
     {
-        _rb = GetComponent<Rigidbody2D>();
+        _rigidBody = GetComponent<Rigidbody2D>();
         _collider = GetComponent<Collider2D>();
         _floorMask = LayerMask.GetMask("Floor");
     }
 
     public void Update()
     {
-        _rb.velocity = new Vector2(_currentInput.x * movementSpeed, _rb.velocity.y);
+        _rigidBody.velocity.Set(_currentInput.x * movementSpeed, _rigidBody.velocity.y);
     }
 
     public void OnMove(InputValue value)
@@ -33,6 +33,6 @@ public class Player : MonoBehaviour
     public void OnJump()
     {
         if (CanJump)
-            _rb.velocity = new Vector2(_rb.velocity.x, jumpSpeed);
+            _rigidBody.velocity.Set(_rigidBody.velocity.x, jumpSpeed);
     }
 }
