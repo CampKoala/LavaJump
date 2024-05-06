@@ -9,6 +9,7 @@ TagManager:
   - Feet
   - Floor
   - Aggro
+  - Music
   layers:
   - Default
   - TransparentFX
