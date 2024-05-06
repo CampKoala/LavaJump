@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace LavaJump
 {
@@ -13,7 +15,8 @@ namespace LavaJump
         [SerializeField] [Min(1)] private int hitDamage;
         [SerializeField] private int health;
         [SerializeField] private HealthBar healthBar;
-
+        [SerializeField] private int gameOverScreen;
+        
         private Rigidbody2D _rigidBody;
         private Collider2D _collider;
         private Collider2D _feetCollider;
@@ -138,9 +141,7 @@ namespace LavaJump
 
             if (other.CompareTag("Lava") && _collider.IsTouching(other))
             {
-                _currentHealth = 0;
-                _animator.SetTrigger(AnimatorDieTrigger);
-                _isDead = true;
+                HandleDeath();
             }
         }
 
@@ -173,11 +174,25 @@ namespace LavaJump
             }
             else
             {
-                _animator.SetTrigger(AnimatorDieTrigger);
-                _isDead = true;
+                HandleDeath();
             }
         }
 
+        private void HandleDeath()
+        {
+            healthBar.SetHealth(0);
+            _animator.SetTrigger(AnimatorDieTrigger);
+            _isDead = true;
+
+            StartCoroutine(HandleDeathScreen());
+        }
+
+        private IEnumerator HandleDeathScreen()
+        {
+            yield return new WaitForSeconds(2);
+            SceneManager.LoadScene(gameOverScreen);
+        }
+        
         public void SubscribeDamage(Action<int> damageAction)
         {
             _damageActions.Add(damageAction);
